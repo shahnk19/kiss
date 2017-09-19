@@ -1,0 +1,68 @@
+#!/bin/sh
+
+usage() {
+	echo "Usage: $0 <start|stop|restart|status|graceful>"
+}
+
+if [ -z "$1" ]; then
+	usage
+	exit 1
+fi
+
+is_running() {
+	pidof ./bin/kiss >/dev/null
+}
+
+start() {
+	if is_running; then
+		echo "WebServer is already running?"
+		exit 1
+	fi
+	echo "Starting WebServer.."
+	./bin/kiss -port=8080
+
+	echo "WebServer started."
+}
+
+stop() {
+	if ! is_running; then
+		echo "WebServer is not running"
+		exit 0
+	fi
+
+	echo "Stopping WebServer.."
+	killall ./bin/kiss
+	echo "WebServer stopped."
+}
+
+restart() {
+	if ! is_running; then
+		echo "WebServer is not running"
+		start
+	else
+		kill -1 $(pidof ./bin/kiss | awk '{print $1}')
+	fi
+}
+
+case "$1" in
+	start)
+		start
+		;;
+	status)
+		status
+		;;
+	stop)
+		stop
+		;;
+	restart)
+		restart
+		;;
+	graceful)
+		graceful
+		;;
+	*)
+		echo "Unknown command: $*"
+		usage
+		exit 1
+		;;
+esac
