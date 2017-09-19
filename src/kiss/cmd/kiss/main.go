@@ -30,7 +30,8 @@ func main() {
 
 	apiRouteGroup := route.Group("/api")
 	{
-		apiRouteGroup.POST("/encode", controllers.Encode())
+		apiRouteGroup.GET("/encode", controllers.Encode())
+		apiRouteGroup.GET("/decode", controllers.Decode())
 	}
 
 	listenAddr := fmt.Sprintf("localhost:%d", port)
