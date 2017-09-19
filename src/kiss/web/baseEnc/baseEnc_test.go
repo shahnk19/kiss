@@ -25,10 +25,12 @@ var testCasesVariousKnownRanges = []struct {
 	{4815162342, "5fRVGK"},
 }
 
+var encoder16 = Base16Encoding()
+var encoder62 = Base62Encoding()
 // encode or decode known numbers and its corresponding values
 func TestEncodeBase62VariousKnownRanges(t *testing.T) {
 	for _, ttc := range testCasesVariousKnownRanges {
-		got := BaseEncode(ttc.enc, Base62)
+		got := encoder62.BaseEncode(ttc.enc)
 		if ttc.dec != got {
 			t.Error(fmt.Sprintf("(!!!)Fail (what:%v,want:%v,got:%s)", ttc.enc, ttc.dec, got))
 		}
@@ -37,7 +39,7 @@ func TestEncodeBase62VariousKnownRanges(t *testing.T) {
 
 func TestDecodeBase62VariousKnownRanges(t *testing.T) {
 	for _, ttc := range testCasesVariousKnownRanges {
-		got,err := BaseDecode(ttc.dec, Base62)
+		got,err := encoder62.BaseDecode(ttc.dec)
 		if err != nil {
 			t.Error(fmt.Sprintf("(!!!)Fail (what:%v,want:%v,error:%v)", ttc.dec, ttc.enc, err))
 		} else if ttc.enc != got {
@@ -55,7 +57,7 @@ func TestEncodeBase62OutOfRanges(t *testing.T) {
 		{-1,""},
 	}
 	for _, ttc := range testCases {
-		got := BaseEncode(ttc.what, Base62)
+		got := encoder62.BaseEncode(ttc.what)
 		if ttc.want != got {
 			t.Error(fmt.Sprintf("(!!!)Fail (what:%v,want:%v,got:%s)", ttc.what, ttc.want, got))
 		}
@@ -73,7 +75,7 @@ func TestDecodeBase62OutOfRanges(t *testing.T) {
 		{"1-0", errors.New("Encoded string is not properly formated for the choosen base")},
 	}
 	for _, ttc := range testCases {
-		_,err := BaseDecode(ttc.what, Base62)
+		_,err := encoder62.BaseDecode(ttc.what)
 		if err != nil && err.Error() != ttc.want.Error() {
 			t.Error(fmt.Sprintf("(!!!)Fail (what:%v,want:%v,got:%s)", ttc.what, ttc.want, err))
 		}
@@ -83,7 +85,7 @@ func TestDecodeBase62OutOfRanges(t *testing.T) {
 // Can this encode match against golang base16 encoder for the range of decimal 0-100?
 func TestEncodeAgainstGolangBase16(t *testing.T) {
 	for what := 0; what < 100; what++ {
-		got := BaseEncode(what, Base16)
+		got := encoder16.BaseEncode(what)
 		want := strconv.FormatInt(int64(what), 16)
 		if want != got {
 			t.Error(fmt.Sprintf("(!!!)Fail (what:%v,want:%v,got:%s)", what, want, got))
@@ -102,8 +104,9 @@ func TestEncodeAnyBaseRanges(t *testing.T) {
 		{"abc", []string{"a", "b", "c", "ba", "bb", "bc", "ca", "cb", "cc", "baa", "bab", "bac", "bba", "bbb", "bbc", "bca", "bcb", "bcc", "caa", "cab", "cac"}},
 	}
 	for _, ttc := range testCases {
+		encoder := NewEncoding(ttc.base)
 		for what := 0; what < 20; what++ {
-			got := BaseEncode(what, ttc.base)
+			got := encoder.BaseEncode(what)
 			if ttc.want[what] != got {
 				t.Error(fmt.Sprintf("(!!!)Fail (what:%v,want:%v,got:%s)", what, ttc.want[what], got))
 			}
