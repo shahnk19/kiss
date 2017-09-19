@@ -25,8 +25,8 @@ var testCasesVariousKnownRanges = []struct {
 	{4815162342, "5fRVGK"},
 }
 
-var encoder16 = Base16Encoding()
-var encoder62 = Base62Encoding()
+var encoder16, _ = Base16Encoding()
+var encoder62, _ = Base62Encoding()
 
 // encode or decode known numbers and its corresponding values
 func TestEncodeBase62VariousKnownRanges(t *testing.T) {
@@ -105,12 +105,33 @@ func TestEncodeAnyBaseRanges(t *testing.T) {
 		{"abc", []string{"a", "b", "c", "ba", "bb", "bc", "ca", "cb", "cc", "baa", "bab", "bac", "bba", "bbb", "bbc", "bca", "bcb", "bcc", "caa", "cab", "cac"}},
 	}
 	for _, ttc := range testCases {
-		encoder := NewEncoding(ttc.base)
+		encoder, _ := NewEncoding(ttc.base)
 		for what := 0; what < 20; what++ {
 			got := encoder.BaseEncode(what)
 			if ttc.want[what] != got {
 				t.Error(fmt.Sprintf("(!!!)Fail (what:%v,want:%v,got:%s)", what, ttc.want[what], got))
 			}
+		}
+	}
+}
+
+//test isUnique
+func TestBaseCharsIsUnique(t *testing.T) {
+	testCases := []struct {
+		base string
+		want bool
+	}{
+		{"", false},
+		{"abcdefghij", true},
+		{"abc", true},
+		{"aabc", false},
+		{"abbc", false},
+		{"abcc", false},
+	}
+	for _, ttc := range testCases {
+		got := isUnique(ttc.base)
+		if ttc.want != got {
+			t.Error(fmt.Sprintf("(!!!)Fail (what:%v,want:%v,got:%s)", ttc.base, ttc.want, got))
 		}
 	}
 }

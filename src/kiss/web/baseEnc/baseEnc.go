@@ -16,18 +16,22 @@ type Encoding struct {
 	base   int
 }
 
-func NewEncoding(encoder string) *Encoding {
+func NewEncoding(encoder string) (*Encoding, error) {
+	//make sure the encode has unique chars
+	if !isUnique(encoder) {
+		return nil, errors.New("base chars are not unique!")
+	}
 	return &Encoding{
 		encode: encoder,
 		base:   len(encoder),
-	}
+	}, nil
 }
 
-func Base62Encoding() *Encoding {
+func Base62Encoding() (*Encoding, error) {
 	return NewEncoding(Base62)
 }
 
-func Base16Encoding() *Encoding {
+func Base16Encoding() (*Encoding, error) {
 	return NewEncoding(Base16)
 }
 
@@ -62,4 +66,18 @@ func (e *Encoding) BaseDecode(s string) (int, error) {
 		n = n + int(c)
 	}
 	return n, nil
+}
+
+func isUnique(s string) bool {
+	if s == "" {
+		return false
+	}
+	isUnique := make(map[string]bool, 0)
+	for _, v := range s {
+		if isUnique[string(v)] {
+			return false
+		}
+		isUnique[string(v)] = true
+	}
+	return true
 }
