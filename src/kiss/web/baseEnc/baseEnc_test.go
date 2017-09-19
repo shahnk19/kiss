@@ -11,7 +11,7 @@ var testCasesVariousKnownRanges = []struct {
 	enc int
 	dec string
 }{
-	{0,"0"},
+	{0, "0"},
 	{9, "9"},
 	{9, "9"},
 	{10, "a"},
@@ -27,6 +27,7 @@ var testCasesVariousKnownRanges = []struct {
 
 var encoder16 = Base16Encoding()
 var encoder62 = Base62Encoding()
+
 // encode or decode known numbers and its corresponding values
 func TestEncodeBase62VariousKnownRanges(t *testing.T) {
 	for _, ttc := range testCasesVariousKnownRanges {
@@ -39,7 +40,7 @@ func TestEncodeBase62VariousKnownRanges(t *testing.T) {
 
 func TestDecodeBase62VariousKnownRanges(t *testing.T) {
 	for _, ttc := range testCasesVariousKnownRanges {
-		got,err := encoder62.BaseDecode(ttc.dec)
+		got, err := encoder62.BaseDecode(ttc.dec)
 		if err != nil {
 			t.Error(fmt.Sprintf("(!!!)Fail (what:%v,want:%v,error:%v)", ttc.dec, ttc.enc, err))
 		} else if ttc.enc != got {
@@ -54,7 +55,7 @@ func TestEncodeBase62OutOfRanges(t *testing.T) {
 		what int
 		want string
 	}{
-		{-1,""},
+		{-1, ""},
 	}
 	for _, ttc := range testCases {
 		got := encoder62.BaseEncode(ttc.what)
@@ -75,7 +76,7 @@ func TestDecodeBase62OutOfRanges(t *testing.T) {
 		{"1-0", errors.New("Encoded string is not properly formated for the choosen base")},
 	}
 	for _, ttc := range testCases {
-		_,err := encoder62.BaseDecode(ttc.what)
+		_, err := encoder62.BaseDecode(ttc.what)
 		if err != nil && err.Error() != ttc.want.Error() {
 			t.Error(fmt.Sprintf("(!!!)Fail (what:%v,want:%v,got:%s)", ttc.what, ttc.want, err))
 		}

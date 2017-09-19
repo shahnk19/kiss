@@ -12,14 +12,14 @@ const (
 )
 
 type Encoding struct {
-	encode   string
-	base     int
+	encode string
+	base   int
 }
 
 func NewEncoding(encoder string) *Encoding {
 	return &Encoding{
 		encode: encoder,
-		base: len(encoder),
+		base:   len(encoder),
 	}
 }
 
@@ -31,7 +31,7 @@ func Base16Encoding() *Encoding {
 	return NewEncoding(Base16)
 }
 
-func (e *Encoding)BaseEncode(n int) string {
+func (e *Encoding) BaseEncode(n int) string {
 	strBased := ""
 	if e.base <= 0 || n < 0 {
 		return ""
@@ -47,7 +47,7 @@ func (e *Encoding)BaseEncode(n int) string {
 	return strBased
 }
 
-func (e *Encoding)BaseDecode(s string) (int, error) {
+func (e *Encoding) BaseDecode(s string) (int, error) {
 	if s == "" {
 		return 0, errors.New("Encoded string is empty")
 	}
