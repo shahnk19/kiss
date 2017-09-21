@@ -3,6 +3,7 @@ GOPATH=$(current_dir)
 install:
 	go get github.com/gin-gonic/gin
 	go get github.com/fvbock/endless
+	go get github.com/lib/pq
 build:
 	gofmt -w  src/kiss/*
 	go install -v kiss/cmd/kiss
