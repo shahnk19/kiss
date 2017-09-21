@@ -28,10 +28,12 @@ func main() {
 		})
 	})
 
-	apiRouteGroup := route.Group("/api")
-	{
-		apiRouteGroup.GET("/encode", controllers.Encode())
-		apiRouteGroup.GET("/decode", controllers.Decode())
+	if ctrl := controllers.New("postgres://user:pass@localhost/kiss"); ctrl != nil {
+		apiRouteGroup := route.Group("/api")
+		{
+			apiRouteGroup.GET("/encode", controllers.Encode(ctrl))
+			apiRouteGroup.GET("/decode", controllers.Decode(ctrl))
+		}
 	}
 
 	listenAddr := fmt.Sprintf("localhost:%d", port)
