@@ -10,9 +10,10 @@ import (
 )
 
 const (
-	ERR_NEW_ENTRY_FAIL = "NewEntry failed"
-	ERR_NIL_ENCODER    = "Fixme! Encoder is nil"
-	ERR_INVALID_URL    = "Encode: Invalid url provided, url=%s"
+	ERR_NEW_ENTRY_FAIL        = "NewEntry failed"
+	ERR_NIL_ENCODER           = "Fixme! Encoder is nil"
+	ERR_INVALID_URL           = "Encode: Invalid url provided, url=%s"
+	ERR_DESTINATION_NOT_FOUND = "Destination url for code(%s),id(%d) not found.Error=%v"
 )
 
 type Ctrl struct {
@@ -92,7 +93,7 @@ func Decode(c *Ctrl) gin.HandlerFunc {
 			Error:  "",
 		}
 
-		//code := ctx.Request.FormValue("code")
+		code := ctx.Request.FormValue("code")
 
 		if c.encoder == nil {
 			vm.Error = ERR_NIL_ENCODER
@@ -100,18 +101,23 @@ func Decode(c *Ctrl) gin.HandlerFunc {
 			ctx.JSON(200, vm)
 			return
 		}
-		//		_, err := c.encoder.BaseDecode(code)
-		//		if err != nil {
-		//			vm.Error = err.Error()
-		//			log.Printf("Fixme : Decoding error=%v", err)
-		//			ctx.JSON(200, vm)
-		//			return
-		//		}
-		vm.Status = true
+		id, err := c.encoder.BaseDecode(code)
+		if err != nil {
+			vm.Error = err.Error()
+			log.Printf("Fixme : Decoding error=%v", err)
+			ctx.JSON(200, vm)
+			return
+		}
+		//load from db rows with id
+		url, err := c.model.GetDestination(id)
+		if err != nil {
+			vm.Error = fmt.Sprintf(ERR_DESTINATION_NOT_FOUND, code, id, err)
+			log.Printf(vm.Error)
+			ctx.JSON(200, vm)
+			return
+		}
 
-		//load from db rows with id = vid
-
-		vm.Value = ""
+		vm.Value = url
 		ctx.JSON(200, vm)
 	}
 }

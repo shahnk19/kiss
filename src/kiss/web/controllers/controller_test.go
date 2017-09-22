@@ -51,6 +51,10 @@ func (m *mockModel) GetLastId() int {
 	return m.lastId
 }
 
+func (m *mockModel) GetDestination(id int) (string, error) {
+	return "", nil
+}
+
 func TestEndpointsEncode_Basic(t *testing.T) {
 	want := VM{Value: "1", Status: true, Error: ""}
 	got := runHttpTestRequests(t, apiPrefix, &mockModel{lastId: 0})

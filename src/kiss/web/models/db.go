@@ -29,6 +29,8 @@ type IModel interface {
 	GetLastId() int
 	// encode the long url and return the short url
 	SaveTiny(url, id string) (string, error)
+	//
+	GetDestination(id int) (string, error)
 }
 
 func (m *Model) SaveTiny(url, id string) (string, error) {
@@ -38,4 +40,8 @@ func (m *Model) SaveTiny(url, id string) (string, error) {
 func (m *Model) GetLastId() int {
 	m.lastId++
 	return m.lastId
+}
+
+func (m *Model) GetDestination(id int) (string, error) {
+	return "", nil
 }
