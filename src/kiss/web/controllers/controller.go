@@ -1,11 +1,18 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"kiss/web/baseEnc"
 	"kiss/web/models"
 	"log"
 	"net/url"
+)
+
+const (
+	ERR_NEW_ENTRY_FAIL = "NewEntry failed"
+	ERR_NIL_ENCODER    = "Fixme! Encoder is nil"
+	ERR_INVALID_URL    = "Encode: Invalid url provided, url=%s"
 )
 
 type Ctrl struct {
@@ -38,28 +45,40 @@ func Encode(c *Ctrl) gin.HandlerFunc {
 
 		url := ctx.Request.FormValue("url")
 		if !isValidUrl(url) {
-			vm.Error = "Invalid url"
-			log.Printf("Encode: Invalid url provided, url=%s", url)
+			vm.Error = fmt.Sprintf(ERR_INVALID_URL, url)
+			log.Printf(vm.Error)
 			ctx.JSON(200, vm)
 			return
 		}
 
 		if c.encoder == nil {
-			vm.Error = "Fixme! Encoder is nil"
+			vm.Error = ERR_NIL_ENCODER
 			log.Println(vm.Error)
 			ctx.JSON(200, vm)
 			return
 		}
 
+		retryCounter := 5
+		lastId := c.encoder.BaseEncode(c.model.GetLastId())
+		var err error
+		var tinyUrl string
 		//insert into db, and get the new row id
-		newId, err := c.model.NewEntry(url)
-		if err != nil {
-			vm.Error = "NewEntry failed"
-			log.Println(vm.Error + err.Error())
-			ctx.JSON(200, vm)
+		for retryCounter >= 0 {
+			tinyUrl, err = c.model.SaveTiny(url, lastId)
+			if err == nil && tinyUrl != "" {
+				break
+			}
+			retryCounter--
 		}
 
-		vm.Value = c.encoder.BaseEncode(newId)
+		if retryCounter <= 0 { //can't get anything unique
+			vm.Error = ERR_NEW_ENTRY_FAIL
+			log.Println(vm.Error)
+			ctx.JSON(200, vm)
+			return
+		}
+
+		vm.Value = tinyUrl
 		vm.Status = true
 		ctx.JSON(200, vm)
 	}
@@ -73,21 +92,21 @@ func Decode(c *Ctrl) gin.HandlerFunc {
 			Error:  "",
 		}
 
-		code := ctx.Request.FormValue("code")
+		//code := ctx.Request.FormValue("code")
 
 		if c.encoder == nil {
-			vm.Error = "Fixme! Encoder is nil"
+			vm.Error = ERR_NIL_ENCODER
 			log.Println(vm.Error)
 			ctx.JSON(200, vm)
 			return
 		}
-		_, err := c.encoder.BaseDecode(code)
-		if err != nil {
-			vm.Error = err.Error()
-			log.Printf("Fixme : Decoding error=%v", err)
-			ctx.JSON(200, vm)
-			return
-		}
+		//		_, err := c.encoder.BaseDecode(code)
+		//		if err != nil {
+		//			vm.Error = err.Error()
+		//			log.Printf("Fixme : Decoding error=%v", err)
+		//			ctx.JSON(200, vm)
+		//			return
+		//		}
 		vm.Status = true
 
 		//load from db rows with id = vid
