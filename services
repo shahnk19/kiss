@@ -19,7 +19,7 @@ start() {
 		exit 1
 	fi
 	echo "Starting WebServer.."
-	./bin/kiss -port=8080
+	./bin/kiss -port=5000
 
 	echo "WebServer started."
 }
