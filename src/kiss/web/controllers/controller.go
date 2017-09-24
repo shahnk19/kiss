@@ -69,6 +69,7 @@ func Encode(c *Ctrl) gin.HandlerFunc {
 			if err == nil && tinyUrl != "" {
 				break
 			}
+			lastId = c.encoder.BaseEncode(c.model.GetLastId())
 			retryCounter--
 		}
 
