@@ -31,7 +31,7 @@ stop() {
 	fi
 
 	echo "Stopping WebServer.."
-	killall ./bin/kiss
+	killall kiss
 	echo "WebServer stopped."
 }
 
