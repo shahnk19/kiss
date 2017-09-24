@@ -2,9 +2,10 @@ package controllers
 
 import (
 	"encoding/json"
-	"errors"
+	//"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"kiss/web/baseEnc"
 	"kiss/web/models"
 	"net/http"
 	"net/http/httptest"
@@ -36,13 +37,12 @@ func TestIsValidUrl(t *testing.T) {
 type mockModel struct {
 	lastId    int
 	currentId int
+	lastUrl   string
 }
 
-func (m *mockModel) SaveTiny(surl, id string) (string, error) {
-	if m.currentId > 0 && m.currentId > m.lastId {
-		return "", errors.New("Id collision mock")
-	}
-	return id, nil
+func (m *mockModel) SaveTiny(surl string, enc *baseEnc.Encoding) (string, error) {
+	m.lastId++
+	return enc.BaseEncode(m.lastId), nil
 }
 
 func (m *mockModel) GetLastId() int {
@@ -50,8 +50,12 @@ func (m *mockModel) GetLastId() int {
 	return m.lastId
 }
 
-func (m *mockModel) GetDestination(id int) (string, error) {
-	return "", nil
+func (m *mockModel) GetUrlById(id int) (string, error) {
+	return m.lastUrl, nil
+}
+
+func (m *mockModel) GetIdByUrl(url string) (int, error) {
+	return m.lastId, nil
 }
 
 func TestEndpointsEncode_Basic(t *testing.T) {
@@ -62,25 +66,9 @@ func TestEndpointsEncode_Basic(t *testing.T) {
 	}
 }
 
-func TestEndpointsEncode_LastIdAlreadyExists(t *testing.T) { //will force retry 1 times
-	want := VM{Value: "2", Status: true, Error: ""}
-	got := runHttpTestRequests(t, apiPrefix, &mockModel{lastId: 1, currentId: 2})
-	if want != got {
-		t.Error(fmt.Sprintf("(!!!)Fail (want:%v,got:%v)", want, got))
-	}
-}
-
-func TestEndpointsEncode_LastIdAlreadyExistsLastRetry(t *testing.T) { //force to go to the last retry
-	want := VM{Value: "6", Status: true, Error: ""}
-	got := runHttpTestRequests(t, apiPrefix, &mockModel{lastId: 1, currentId: 6})
-	if want != got {
-		t.Error(fmt.Sprintf("(!!!)Fail (want:%v,got:%v)", want, got))
-	}
-}
-
-func TestEndpointsEncode_LastIdAlreadyExistsExhaustRetry(t *testing.T) { //exhaust all retry
-	want := VM{Value: "", Status: false, Error: ERR_NEW_ENTRY_FAIL}
-	got := runHttpTestRequests(t, apiPrefix, &mockModel{lastId: 1, currentId: 7})
+func TestEndpointsEncode_UrlDuplicates(t *testing.T) {
+	want := VM{Value: "1", Status: true, Error: ""}
+	got := runHttpTestRequests(t, apiPrefix, &mockModel{lastId: 1, lastUrl: apiPrefix})
 	if want != got {
 		t.Error(fmt.Sprintf("(!!!)Fail (want:%v,got:%v)", want, got))
 	}

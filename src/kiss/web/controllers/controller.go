@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	ERR_NEW_ENTRY_FAIL        = "NewEntry failed"
+	ERR_NEW_ENTRY_FAIL        = "NewEntry failed, Error=%v"
 	ERR_NIL_ENCODER           = "Fixme! Encoder is nil"
 	ERR_INVALID_URL           = "Encode: Invalid url provided, url=%s"
 	ERR_DESTINATION_NOT_FOUND = "Destination url for code(%s),id(%d) not found.Error=%v"
@@ -58,23 +58,15 @@ func Encode(c *Ctrl) gin.HandlerFunc {
 			ctx.JSON(200, vm)
 			return
 		}
-
-		retryCounter := 5
-		lastId := c.encoder.BaseEncode(c.model.GetLastId())
-		var err error
-		var tinyUrl string
-		//insert into db, and get the new row id
-		for retryCounter >= 0 {
-			tinyUrl, err = c.model.SaveTiny(url, lastId)
-			if err == nil && tinyUrl != "" {
-				break
-			}
-			lastId = c.encoder.BaseEncode(c.model.GetLastId())
-			retryCounter--
+		if id, err := c.model.GetIdByUrl(url); err == nil && id > 0 {
+			vm.Value = c.encoder.BaseEncode(id)
+			vm.Status = true
+			ctx.JSON(200, vm)
+			return
 		}
-
-		if retryCounter <= 0 { //can't get anything unique
-			vm.Error = ERR_NEW_ENTRY_FAIL
+		tinyUrl, err := c.model.SaveTiny(url, c.encoder)
+		if err != nil {
+			vm.Error = fmt.Sprintf(ERR_NEW_ENTRY_FAIL, err)
 			log.Println(vm.Error)
 			ctx.JSON(200, vm)
 			return
@@ -110,7 +102,7 @@ func Decode(c *Ctrl) gin.HandlerFunc {
 			return
 		}
 		//load from db rows with id
-		url, err := c.model.GetDestination(id)
+		url, err := c.model.GetUrlById(id)
 		if err != nil {
 			vm.Error = fmt.Sprintf(ERR_DESTINATION_NOT_FOUND, code, id, err)
 			log.Printf(vm.Error)

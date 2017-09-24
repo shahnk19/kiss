@@ -28,7 +28,7 @@ func main() {
 		})
 	})
 
-	if ctrl := controllers.New("postgres://user:pass@localhost/kiss"); ctrl != nil {
+	if ctrl := controllers.New("postgres://postgres:root@localhost/kiss"); ctrl != nil {
 		apiRouteGroup := route.Group("/api")
 		{
 			apiRouteGroup.GET("/encode", controllers.Encode(ctrl))
