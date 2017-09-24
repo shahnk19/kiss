@@ -2,7 +2,6 @@ current_dir = $(shell pwd)
 GOPATH=$(current_dir)
 all: install build
 install:
-	
 	go get github.com/gin-gonic/gin
 	go get github.com/fvbock/endless
 	go get github.com/lib/pq

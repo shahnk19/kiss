@@ -28,7 +28,7 @@ func main() {
 		})
 	})
 
-	if ctrl := controllers.New("postgres://postgres:root@localhost/kiss"); ctrl != nil {
+	if ctrl := controllers.New("postgres://postgres:root@localhost/kiss?sslmode=disable"); ctrl != nil {
 		route.NoRoute(controllers.Parser(ctrl))
 		apiRouteGroup := route.Group("/api")
 		{
