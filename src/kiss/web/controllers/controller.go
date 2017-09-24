@@ -115,6 +115,38 @@ func Decode(c *Ctrl) gin.HandlerFunc {
 	}
 }
 
+func Parser(c *Ctrl) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+
+		code := ctx.Request.URL.Path
+		code = code[1:] //remove the first chat '/'
+
+		if c.encoder == nil {
+			log.Println(ERR_NIL_ENCODER)
+			ctx.String(404, "404 Not Found")
+			return
+		}
+		id, err := c.encoder.BaseDecode(code)
+		if err != nil {
+			log.Printf("Fixme : Decoding error=%v", err)
+			ctx.String(404, "404 Not Found")
+			return
+		}
+		//load from db rows with id
+		url, err := c.model.GetUrlById(id)
+		if err != nil {
+			log.Printf(fmt.Sprintf(ERR_DESTINATION_NOT_FOUND, code, id, err))
+			ctx.String(404, "404 Not Found")
+			return
+		}
+		if url == "" {
+			ctx.String(404, "404 Not Found")
+			return
+		}
+		ctx.Redirect(302, url)
+	}
+}
+
 func isValidUrl(sUrl string) bool {
 	if sUrl == "" {
 		return false
