@@ -40,7 +40,6 @@ type mockModel struct {
 
 func (m *mockModel) SaveTiny(surl, id string) (string, error) {
 	if m.currentId > 0 && m.currentId > m.lastId {
-		m.lastId++
 		return "", errors.New("Id collision mock")
 	}
 	return id, nil
@@ -72,7 +71,7 @@ func TestEndpointsEncode_LastIdAlreadyExists(t *testing.T) { //will force retry 
 }
 
 func TestEndpointsEncode_LastIdAlreadyExistsLastRetry(t *testing.T) { //force to go to the last retry
-	want := VM{Value: "2", Status: true, Error: ""}
+	want := VM{Value: "6", Status: true, Error: ""}
 	got := runHttpTestRequests(t, apiPrefix, &mockModel{lastId: 1, currentId: 6})
 	if want != got {
 		t.Error(fmt.Sprintf("(!!!)Fail (want:%v,got:%v)", want, got))
