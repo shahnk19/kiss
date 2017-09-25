@@ -36,7 +36,7 @@ func parseTemplates() multitemplate.Render {
 		t.Funcs(template.FuncMap{"appName": func() string {
 			return strings.TrimSuffix(t.Name(), ".html") + "App"
 		}})
-		r.Add(file, template.Must(t.ParseFiles(tdir+file, tdir+"header.html")))
+		r.Add(file, template.Must(t.ParseFiles(tdir+file)))
 	}
 	return r
 }
