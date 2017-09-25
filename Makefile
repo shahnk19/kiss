@@ -5,6 +5,7 @@ install:
 	go get github.com/gin-gonic/gin
 	go get github.com/fvbock/endless
 	go get github.com/lib/pq
+	go get github.com/gin-gonic/contrib/renders/multitemplate
 	
 build:
 	gofmt -w  src/kiss/*
