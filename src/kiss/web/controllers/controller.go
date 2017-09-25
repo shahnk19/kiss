@@ -139,7 +139,6 @@ func Parser(c *Ctrl) gin.HandlerFunc {
 			if err != nil {
 				log.Printf("Error getting from cache, error = %v", err)
 			} else {
-				log.Printf("Redirecting from cache:url=%s", url)
 				c.cache.Put(cacheConn)
 				ctx.Redirect(302, url)
 				return
