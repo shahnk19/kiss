@@ -1,1 +1,1 @@
-web: bin/kiss
+web: ./services start 
