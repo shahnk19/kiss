@@ -43,6 +43,7 @@ func parseTemplates() multitemplate.Render {
 
 func main() {
 	flag.Parse()
+
 	route := gin.Default()
 	route.Use(static.Serve("/w/css", static.LocalFile("css", true)))
 

@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/mediocregopher/radix.v2/pool"
 	"kiss/web/baseEnc"
 	"kiss/web/models"
 	"log"
@@ -19,14 +20,20 @@ const (
 type Ctrl struct {
 	model   models.IModel
 	encoder *baseEnc.Encoding
+	cache   *pool.Pool
 	Name    string
 }
 
 func New(conn string) *Ctrl {
+	p, err := pool.New("tcp", "localhost:6379", 500)
+	if err != nil {
+		log.Panic(err)
+	}
 	return &Ctrl{
 		Name:    "hotpie",
 		encoder: getBaseEncoder(),
 		model:   models.New(conn),
+		cache:   p,
 	}
 }
 
@@ -117,32 +124,63 @@ func Decode(c *Ctrl) gin.HandlerFunc {
 
 func Parser(c *Ctrl) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		var err error
+		cacheConn, err := c.cache.Get()
+		if err != nil {
+			log.Panicln(err)
+		}
 
 		code := ctx.Request.URL.Path
 		code = code[1:] //remove the first chat '/'
+		url := ""
+		//try load from cache
+		if cacheConn != nil {
+			url, err = cacheConn.Cmd("HGET", code, "url").Str()
+			if err != nil {
+				log.Printf("Error getting from cache, error = %v", err)
+			} else {
+				log.Printf("Redirecting from cache:url=%s", url)
+				c.cache.Put(cacheConn)
+				ctx.Redirect(302, url)
+				return
+			}
+		}
 
 		if c.encoder == nil {
 			log.Println(ERR_NIL_ENCODER)
+			c.cache.Put(cacheConn)
 			ctx.String(404, "404 Not Found")
 			return
 		}
 		id, err := c.encoder.BaseDecode(code)
 		if err != nil {
 			log.Printf("Fixme : Decoding error=%v", err)
+			c.cache.Put(cacheConn)
 			ctx.String(404, "404 Not Found")
 			return
 		}
 		//load from db rows with id
-		url, err := c.model.GetUrlById(id)
+		url, err = c.model.GetUrlById(id)
 		if err != nil {
 			log.Printf(fmt.Sprintf(ERR_DESTINATION_NOT_FOUND, code, id, err))
+			c.cache.Put(cacheConn)
 			ctx.String(404, "404 Not Found")
 			return
 		}
 		if url == "" {
+			c.cache.Put(cacheConn)
 			ctx.String(404, "404 Not Found")
 			return
 		}
+
+		//save to redis so next time we don't come here again
+		if cacheConn != nil {
+			err = cacheConn.Cmd("HMSET", code, "url", url).Err
+			if err != nil {
+				log.Printf("Error setting to cache, error = %v", err)
+			}
+		}
+		c.cache.Put(cacheConn)
 		ctx.Redirect(302, url)
 	}
 }
